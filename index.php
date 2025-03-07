@@ -61,8 +61,8 @@
                         <td><?php echo $row['ratings']; ?></td>
                         <td class="d-flex justify-content-center">
                           <button class="btn btn-success btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#editInfo" onclick="populateEditForm(<?php echo htmlspecialchars(json_encode($row)); ?>)">Edit</button>
-                          <button class="btn btn-secondary btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#viewInfo">View</button>
-                          <button class="btn btn-danger btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#deleteInfo">Delete</button>
+                          <button class="btn btn-secondary btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#viewInfo" onclick="populateViewForm(<?php echo htmlspecialchars(json_encode($row)); ?>)">View</button>
+                          <button class="btn btn-danger btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#deleteInfo" onclick="populateDeleteForm(<?php echo $row['movie_id']; ?>)">Delete</button>
                         </td>
                       </tr>
                   <?php endwhile; ?>
@@ -93,7 +93,7 @@
         
       </div>
 
-      <!-- Modal -->
+      <!--Update Modal -->
       <div class="modal fade" id="editInfo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editInfoLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -129,6 +129,62 @@
           </div>
         </div>
       </div>
+
+      <!-- View Modal -->
+      <div class="modal fade" id="viewInfo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="viewInfoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="viewInfoLabel">View Movie Information</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="viewMovieForm">
+                <div class="mb-3">
+                  <label for="viewMovieTitle" class="form-label">Movie Title</label>
+                  <input type="text" class="form-control" id="viewMovieTitle" name="title" readonly>
+                </div>
+                <div class="mb-3">
+                  <label for="viewReleaseYear" class="form-label">Release Year</label>
+                  <input type="number" class="form-control" id="viewReleaseYear" name="release_year" readonly>
+                </div>
+                <div class="mb-3">
+                  <label for="viewGenre" class="form-label">Genre</label>
+                  <input type="text" class="form-control" id="viewGenre" name="genre" readonly>
+                </div>
+                <div class="mb-3">
+                  <label for="viewRatings" class="form-label">Ratings</label>
+                  <input type="number" class="form-control" id="viewRatings" name="ratings" readonly>
+                </div>
+                <input type="hidden" id="viewMovieId" name="movie_id">
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Modal -->
+      <div class="modal fade" id="deleteInfo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="deleteInfoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="deleteInfoLabel">Delete Movie</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to delete this movie?</p>
+              <input type="hidden" id="deleteMovieId">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+              <button type="button" class="btn btn-danger" id="confirmDelete">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
   </main><!-- End #main -->
@@ -143,6 +199,18 @@ include('partials\footer.php');
     document.getElementById('releaseYear').value = movie.release_year;
     document.getElementById('genre').value = movie.genre;
     document.getElementById('ratings').value = movie.ratings;
+  }
+
+  function populateViewForm(movie) {
+    document.getElementById('viewMovieId').value = movie.movie_id;
+    document.getElementById('viewMovieTitle').value = movie.title;
+    document.getElementById('viewReleaseYear').value = movie.release_year;
+    document.getElementById('viewGenre').value = movie.genre;
+    document.getElementById('viewRatings').value = movie.ratings;
+  }
+
+  function populateDeleteForm(movieId) {
+    document.getElementById('deleteMovieId').value = movieId;
   }
 
   document.getElementById('saveChanges').addEventListener('click', function() {
@@ -160,6 +228,23 @@ include('partials\footer.php');
       } else {
         alert('Failed to update movie information: ' + (data.error || 'Unknown error'));
       }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+
+  document.getElementById('confirmDelete').addEventListener('click', function() {
+    var movieId = document.getElementById('deleteMovieId').value;
+    var formData = new FormData();
+    formData.append('movie_id', movieId);
+
+    fetch('database/delete.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+      alert(data);
+      location.reload();
     })
     .catch(error => console.error('Error:', error));
   });
