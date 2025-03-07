@@ -3,11 +3,21 @@
   include('partials\sidebar.php');
   include('database\database.php');
 
+  // Handle search query
+  $query = isset($_GET['query']) ? $_GET['query'] : '';
 
-  // Your PHP BACK CODE HERE
-  $sql = "SELECT * FROM movies";
-  $movies = $conn->query($sql);
-
+  // Prepare the SQL query
+  if ($query) {
+    $sql = "SELECT * FROM movies WHERE title LIKE ? OR release_year LIKE ? OR genre LIKE ? OR ratings LIKE ?";
+    $stmt = $conn->prepare($sql);
+    $searchTerm = '%' . $query . '%';
+    $stmt->bind_param("ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+    $stmt->execute();
+    $movies = $stmt->get_result();
+  } else {
+    $sql = "SELECT * FROM movies";
+    $movies = $conn->query($sql);
+  }
 ?>
 
   <main id="main" class="main">
