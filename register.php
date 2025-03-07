@@ -1,3 +1,53 @@
+<?php
+include('database/database.php'); // Include the database connection file
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    // Check if passwords match
+    if ($password !== $confirm_password) {
+        $error = "Passwords do not match.";
+    } else {
+        // Check for duplicate username or email
+        $sql = "SELECT * FROM users WHERE username = ? OR email = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ss", $username, $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $error = "Username or email already exists.";
+        } else {
+            // Hash the password
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            // Insert the new user into the database
+            $sql = "INSERT INTO users (name, email, username, password) VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssss", $name, $email, $username, $hashed_password);
+
+            if ($stmt->execute()) {
+                echo "<script>
+                        alert('Registration successful!');
+                        window.location.href = 'login.php';
+                      </script>";
+                exit();
+            } else {
+                $error = "Error: " . $stmt->error;
+            }
+
+            $stmt->close();
+        }
+
+        $conn->close();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -64,7 +114,13 @@
                     <p class="text-center small">Enter your personal details to create account</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" novalidate>
+                  <?php if (isset($error)): ?>
+                    <div class="alert alert-danger" role="alert">
+                      <?php echo $error; ?>
+                    </div>
+                  <?php endif; ?>
+
+                  <form class="row g-3 needs-validation" novalidate method="POST" action="">
                     <div class="col-12">
                       <label for="yourName" class="form-label">Your Name</label>
                       <input type="text" name="name" class="form-control" id="yourName" required>
@@ -74,7 +130,7 @@
                     <div class="col-12">
                       <label for="yourEmail" class="form-label">Your Email</label>
                       <input type="email" name="email" class="form-control" id="yourEmail" required>
-                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
+                      <div class="invalid-feedback">Please enter a valid Email address!</div>
                     </div>
 
                     <div class="col-12">
@@ -93,6 +149,12 @@
                     </div>
 
                     <div class="col-12">
+                      <label for="confirmPassword" class="form-label">Confirm Password</label>
+                      <input type="password" name="confirm_password" class="form-control" id="confirmPassword" required>
+                      <div class="invalid-feedback">Please confirm your password!</div>
+                    </div>
+
+                    <div class="col-12">
                       <div class="form-check">
                         <input class="form-check-input" name="terms" type="checkbox" value="" id="acceptTerms" required>
                         <label class="form-check-label" for="acceptTerms">I agree and accept the <a href="#">terms and conditions</a></label>
@@ -100,10 +162,10 @@
                       </div>
                     </div>
                     <div class="col-12">
-                      <button class="btn btn-primary w-100" type="submit">Create Account</button>
+                      <button class="btn btn-primary w-100" type="submit" id="submitBtn" disabled>Create Account</button>
                     </div>
                     <div class="col-12">
-                      <p class="small mb-0">Already have an account? <a href="pages-login.html">Log in</a></p>
+                      <p class="small mb-0">Already have an account? <a href="login.php">Log in</a></p>
                     </div>
                   </form>
 
@@ -141,6 +203,46 @@
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- Custom JS to handle password matching and terms checkbox -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const name = document.getElementById('yourName');
+      const email = document.getElementById('yourEmail');
+      const username = document.getElementById('yourUsername');
+      const password = document.getElementById('yourPassword');
+      const confirmPassword = document.getElementById('confirmPassword');
+      const terms = document.getElementById('acceptTerms');
+      const submitBtn = document.getElementById('submitBtn');
+
+      function validateForm() {
+        if (
+          name.value.trim() !== '' &&
+          email.value.trim() !== '' &&
+          username.value.trim() !== '' &&
+          password.value === confirmPassword.value &&
+          terms.checked
+        ) {
+          submitBtn.disabled = false;
+          confirmPassword.setCustomValidity('');
+        } else {
+          submitBtn.disabled = true;
+          if (password.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity('Passwords do not match');
+          } else {
+            confirmPassword.setCustomValidity('');
+          }
+        }
+      }
+
+      name.addEventListener('input', validateForm);
+      email.addEventListener('input', validateForm);
+      username.addEventListener('input', validateForm);
+      password.addEventListener('input', validateForm);
+      confirmPassword.addEventListener('input', validateForm);
+      terms.addEventListener('change', validateForm);
+    });
+  </script>
 
 </body>
 

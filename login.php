@@ -6,18 +6,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
+    // Check if the user exists
     $sql = "SELECT * FROM users WHERE username = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
+    if ($result->num_rows == 1) {
         $user = $result->fetch_assoc();
+        // Verify the password
         if (password_verify($password, $user['password'])) {
+            // Password is correct, start a session
             $_SESSION['userid'] = $user['userid'];
             $_SESSION['username'] = $user['username'];
-            header("Location: index.php"); // Redirect to index.php upon successful login
+            echo "<script>
+                    alert('Login successful!');
+                    window.location.href = 'index.php';
+                  </script>";
             exit();
         } else {
             $error = "Invalid password.";

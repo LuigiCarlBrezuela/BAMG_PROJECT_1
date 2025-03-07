@@ -46,7 +46,6 @@
                     <th scope="col">Movie Title</th>
                     <th scope="col">Release Year</th>
                     <th scope="col">Genre</th>
-                    <th scope="col">Descriptions</th>
                     <th scope="col">Ratings</th>
                     <th scope="col" class="text-center">Action</th>
                   </tr>
@@ -59,7 +58,6 @@
                         <td><?php echo $row['title']; ?></td>
                         <td><?php echo $row['release_year']; ?></td>
                         <td><?php echo $row['genre']; ?></td>
-                        <td><?php echo $row['descriptions']; ?></td>
                         <td><?php echo $row['ratings']; ?></td>
                         <td class="d-flex justify-content-center">
                           <button class="btn btn-success btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#editInfo">Edit</button>
