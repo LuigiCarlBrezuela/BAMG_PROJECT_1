@@ -1,6 +1,8 @@
 <?php
 include('database.php');
 
+$response = array('success' => false);
+
 if (isset($_POST['movie_id'])) {
   $movie_id = $_POST['movie_id'];
   $title = $_POST['title'];
@@ -13,14 +15,16 @@ if (isset($_POST['movie_id'])) {
   $stmt->bind_param("sisdi", $title, $release_year, $genre, $rating, $movie_id);
 
   if ($stmt->execute()) {
-    echo "Record updated successfully";
+    $response['success'] = true;
   } else {
-    echo "Error updating record: " . $stmt->error;
+    $response['error'] = "Error updating record: " . $stmt->error;
   }
 
   $stmt->close();
   $conn->close();
 } else {
-  echo "Invalid request.";
+  $response['error'] = "Invalid request.";
 }
+
+echo json_encode($response);
 ?>

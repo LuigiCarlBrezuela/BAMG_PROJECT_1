@@ -60,18 +60,9 @@
                         <td><?php echo $row['genre']; ?></td>
                         <td><?php echo $row['ratings']; ?></td>
                         <td class="d-flex justify-content-center">
-                          <button class="btn btn-success btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#editInfo">Edit</button>
+                          <button class="btn btn-success btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#editInfo" onclick="populateEditForm(<?php echo htmlspecialchars(json_encode($row)); ?>)">Edit</button>
                           <button class="btn btn-secondary btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#viewInfo">View</button>
                           <button class="btn btn-danger btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#deleteInfo">Delete</button>
-                          <!-- UPDATE MODAL -->
-                           <div class="modal fade" id="editInfo" data-bs-backdrop="static" data-bs-toggle="false" tabindex="-1" aria-labelledby="editInfoLabel" aria-hidden="true">
-                          <!-- VIEW MODAL   -->
-                          <div class="modal fade" id="viewInfo" data-bs-backdrop="static" data-bs-toggle="false" tabindex="-1" aria-labelledby="viewInfoLabel" aria-hidden="true">
-                          </div>
-                          <!-- DELETE MODAL -->
-                           <div class="modal fade" id="deleteInfo" data-bs-backdrop="static" data-bs-toggle="false" tabindex="-1" aria-labelledby="deleteInfoLabel" aria-hidden="true">
-                            
-                           </div>
                         </td>
                       </tr>
                   <?php endwhile; ?>
@@ -107,14 +98,33 @@
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="editInfoLabel">Employee Information</h1>
+              <h1 class="modal-title fs-5" id="editInfoLabel">Edit Movie Information</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              ...
+              <form id="editMovieForm">
+                <div class="mb-3">
+                  <label for="movieTitle" class="form-label">Movie Title</label>
+                  <input type="text" class="form-control" id="movieTitle" name="title" required>
+                </div>
+                <div class="mb-3">
+                  <label for="releaseYear" class="form-label">Release Year</label>
+                  <input type="number" class="form-control" id="releaseYear" name="release_year" required>
+                </div>
+                <div class="mb-3">
+                  <label for="genre" class="form-label">Genre</label>
+                  <input type="text" class="form-control" id="genre" name="genre" required>
+                </div>
+                <div class="mb-3">
+                  <label for="ratings" class="form-label">Ratings</label>
+                  <input type="number" class="form-control" id="ratings" name="ratings" required>
+                </div>
+                <input type="hidden" id="movieId" name="movie_id">
+              </form>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
             </div>
           </div>
         </div>
@@ -125,3 +135,32 @@
 <?php
 include('partials\footer.php');
 ?>
+
+<script>
+  function populateEditForm(movie) {
+    document.getElementById('movieId').value = movie.movie_id;
+    document.getElementById('movieTitle').value = movie.title;
+    document.getElementById('releaseYear').value = movie.release_year;
+    document.getElementById('genre').value = movie.genre;
+    document.getElementById('ratings').value = movie.ratings;
+  }
+
+  document.getElementById('saveChanges').addEventListener('click', function() {
+    var form = document.getElementById('editMovieForm');
+    var formData = new FormData(form);
+
+    fetch('database/update.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('Failed to update movie information: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+</script>
