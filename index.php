@@ -28,7 +28,7 @@
             <div class="card-body">
               <div class="d-flex justify-content-between">
                 <div>
-                  <h5 class="card-title">Default Table</h5>
+                  <h5 class="card-title">Movie Table</h5>
                 </div>
                 <div>
                   <button class="btn btn-primary btn-sm mt-4 mx-3">Add Employee</button>
