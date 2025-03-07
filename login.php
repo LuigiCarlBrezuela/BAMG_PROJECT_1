@@ -1,3 +1,36 @@
+<?php
+session_start();
+include('database/database.php'); // Include the database connection file
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    $sql = "SELECT * FROM users WHERE username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['userid'] = $user['userid'];
+            $_SESSION['username'] = $user['username'];
+            header("Location: index.php"); // Redirect to index.php upon successful login
+            exit();
+        } else {
+            $error = "Invalid password.";
+        }
+    } else {
+        $error = "No user found with that username.";
+    }
+
+    $stmt->close();
+    $conn->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -64,7 +97,13 @@
                     <p class="text-center small">Enter your username & password to login</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" novalidate>
+                  <?php if (isset($error)): ?>
+                    <div class="alert alert-danger" role="alert">
+                      <?php echo $error; ?>
+                    </div>
+                  <?php endif; ?>
+
+                  <form class="row g-3 needs-validation" novalidate method="POST" action="">
 
                     <div class="col-12">
                       <label for="yourUsername" class="form-label">Username</label>
@@ -91,7 +130,7 @@
                       <button class="btn btn-primary w-100" type="submit">Login</button>
                     </div>
                     <div class="col-12">
-                      <p class="small mb-0">Don't have account? <a href="pages-register.html">Create an account</a></p>
+                      <p class="small mb-0">Don't have account? <a href="register.php">Create an account</a></p>
                     </div>
                   </form>
 
