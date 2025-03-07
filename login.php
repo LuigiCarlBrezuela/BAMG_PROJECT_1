@@ -1,3 +1,41 @@
+<?php
+session_start();
+include('database/database.php'); // Include the database connection file
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // Check if the user exists
+    $sql = "SELECT * FROM users WHERE username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        // Verify the password
+        if (password_verify($password, $user['password'])) {
+            // Password is correct, start a session
+            $_SESSION['username'] = $user['username'];
+            echo "<script>
+                    alert('Login successful!');
+                    window.location.href = 'index.php';
+                  </script>";
+            exit();
+        } else {
+            $error = "Invalid password.";
+        }
+    } else {
+        $error = "No user found with that username.";
+    }
+
+    $stmt->close();
+    $conn->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -64,7 +102,13 @@
                     <p class="text-center small">Enter your username & password to login</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" novalidate>
+                  <?php if (isset($error)): ?>
+                    <div class="alert alert-danger" role="alert">
+                      <?php echo $error; ?>
+                    </div>
+                  <?php endif; ?>
+
+                  <form class="row g-3 needs-validation" novalidate method="POST" action="">
 
                     <div class="col-12">
                       <label for="yourUsername" class="form-label">Username</label>
