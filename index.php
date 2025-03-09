@@ -6,18 +6,39 @@
   // Handle search query
   $query = isset($_GET['query']) ? $_GET['query'] : '';
 
+  // Handle pagination
+  $limit = 10; // Number of entries to show in a page.
+  $page = isset($_GET['page']) ? $_GET['page'] : 1;
+  $start = ($page - 1) * $limit;
+
   // Prepare the SQL query
   if ($query) {
-    $sql = "SELECT * FROM movies WHERE title LIKE ? OR release_year LIKE ? OR genre LIKE ? OR ratings LIKE ?";
+    $sql = "SELECT * FROM movies WHERE title LIKE ? OR release_year LIKE ? OR genre LIKE ? OR ratings LIKE ? LIMIT ?, ?";
     $stmt = $conn->prepare($sql);
     $searchTerm = '%' . $query . '%';
-    $stmt->bind_param("ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+    $stmt->bind_param("ssssii", $searchTerm, $searchTerm, $searchTerm, $searchTerm, $start, $limit);
     $stmt->execute();
     $movies = $stmt->get_result();
+
+    $sqlTotal = "SELECT COUNT(*) FROM movies WHERE title LIKE ? OR release_year LIKE ? OR genre LIKE ? OR ratings LIKE ?";
+    $stmtTotal = $conn->prepare($sqlTotal);
+    $stmtTotal->bind_param("ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+    $stmtTotal->execute();
+    $resultTotal = $stmtTotal->get_result();
+    $total = $resultTotal->fetch_row()[0];
   } else {
-    $sql = "SELECT * FROM movies";
-    $movies = $conn->query($sql);
+    $sql = "SELECT * FROM movies LIMIT ?, ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $start, $limit);
+    $stmt->execute();
+    $movies = $stmt->get_result();
+
+    $sqlTotal = "SELECT COUNT(*) FROM movies";
+    $resultTotal = $conn->query($sqlTotal);
+    $total = $resultTotal->fetch_row()[0];
   }
+
+  $pages = ceil($total / $limit);
 ?>
 
 <main id="main" class="main">
@@ -49,7 +70,7 @@
             </div>
 
             <!-- Default Table -->
-            <table class="table table-striped" >
+            <table class="table table-striped">
               <thead>
                 <tr>
                   <th scope="col">Movie ID</th>
@@ -65,9 +86,9 @@
                   <?php while($row = $movies->fetch_assoc()): ?>
                     <tr>
                       <td><?php echo $row['movie_id']; ?></td>
-                      <td><?php echo $row['title']; ?></td>
+                      <td><?php echo ucwords(strtolower($row['title'])); ?></td>
                       <td><?php echo $row['release_year']; ?></td>
-                      <td><?php echo $row['genre']; ?></td>
+                      <td><?php echo ucwords(strtolower($row['genre'])); ?></td>
                       <td><?php echo $row['ratings']; ?></td>
                       <td class="d-flex justify-content-center">
                         <button class="btn btn-success btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#editInfo" onclick="populateEditForm(<?php echo htmlspecialchars(json_encode($row)); ?>)">Edit</button>
@@ -88,11 +109,17 @@
           <div class="mx-4">
             <nav aria-label="Page navigation example">
               <ul class="pagination">
-                <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                <li class="page-item <?php if($page <= 1){ echo 'disabled'; } ?>">
+                  <a class="page-link" href="<?php if($page > 1){ echo "?page=".($page - 1); } ?>">Previous</a>
+                </li>
+                <?php for($i = 1; $i <= $pages; $i++): ?>
+                  <li class="page-item <?php if($page == $i){ echo 'active'; } ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                  </li>
+                <?php endfor; ?>
+                <li class="page-item <?php if($page >= $pages){ echo 'disabled'; } ?>">
+                  <a class="page-link" href="<?php if($page < $pages){ echo "?page=".($page + 1); } ?>">Next</a>
+                </li>
               </ul>
             </nav>
           </div>
