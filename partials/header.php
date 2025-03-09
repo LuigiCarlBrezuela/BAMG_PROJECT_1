@@ -94,7 +94,7 @@
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="#">
+              <a class="dropdown-item d-flex align-items-center" href="#" onclick="confirmSignOut(event)">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>Sign Out</span>
               </a>
@@ -107,3 +107,14 @@
     </nav><!-- End Icons Navigation -->
 
   </header><!-- End Header -->
+
+  <script>
+    function confirmSignOut(event) {
+      event.preventDefault();
+      if (confirm('Are you sure you want to sign out?')) {
+        window.location.href = 'login.php';
+      }
+    }
+  </script>
+</body>
+</html>

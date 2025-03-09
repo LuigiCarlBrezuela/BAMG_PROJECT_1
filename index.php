@@ -86,9 +86,9 @@
                   <?php while($row = $movies->fetch_assoc()): ?>
                     <tr>
                       <td><?php echo $row['movie_id']; ?></td>
-                      <td><?php echo $row['title']; ?></td>
+                      <td><?php echo ucwords(strtolower($row['title'])); ?></td>
                       <td><?php echo $row['release_year']; ?></td>
-                      <td><?php echo $row['genre']; ?></td>
+                      <td><?php echo ucwords(strtolower($row['genre'])); ?></td>
                       <td><?php echo $row['ratings']; ?></td>
                       <td class="d-flex justify-content-center">
                         <button class="btn btn-success btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#editInfo" onclick="populateEditForm(<?php echo htmlspecialchars(json_encode($row)); ?>)">Edit</button>
